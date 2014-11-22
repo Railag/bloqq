@@ -1,0 +1,30 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:ActionBar="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.bloqq.MainActivity" >
+
+    <item
+        android:id="@+id/go_button"
+        ActionBar:showAsAction="ifRoom"
+        android:orderInCategory="100"
+        android:title="@string/action_go"/>
+    <item
+        android:id="@+id/settings_button"
+        ActionBar:showAsAction="ifRoom"
+        android:orderInCategory="1000"
+        android:title="@string/settings"/>
+    <item
+        android:id="@+id/hist_button"
+        ActionBar:showAsAction="ifRoom"
+        android:orderInCategory="800"
+        android:title="@string/hist"/>
+    <item
+        android:id="@+id/action_go"
+        ActionBar:actionViewClass="com.bloqq.edits.AddressUrlEdit"
+        ActionBar:showAsAction="ifRoom|collapseActionView"
+        android:icon="@android:drawable/ic_input_get"
+        android:orderInCategory="10"
+        android:title="@string/action_go"/>
+
+</menu>
