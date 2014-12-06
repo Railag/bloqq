@@ -8,5 +8,22 @@
     <string name="hist">History</string>
     <string name="pref_homepage">Homepage URL</string>
     <string name="pref_homepage_summary">Put here your start page url</string>
+    <string name="fav">Favorites</string>
+    <string name="fav_add">Add favorite</string>
+    <string name="default_font_size">100</string>
+    <string name="font_size">Font size</string>
+    <string name="clear_hist">Clear history</string>
+    <string name="clear_fav">Clear favorites</string>
+
+    <string-array name="font_sizes">
+        <item>Large</item>
+        <item>Normal</item>
+        <item>Small</item>
+    </string-array>
+    <string-array name="font_sizes_int">
+        <item>130</item>
+        <item>100</item>
+        <item>70</item>
+    </string-array>
 
 </resources>

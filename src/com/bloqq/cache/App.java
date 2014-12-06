@@ -1,6 +1,6 @@
 package com.bloqq.cache;
 
-import com.bloqq.sqlite.HistDBHelper;
+import com.bloqq.sqlite.BloqqDBHelper;
 
 import android.app.Application;
 import android.content.Context;
@@ -15,7 +15,7 @@ public class App extends Application {
 
 	private static SQLiteDatabase sDb;
 
-	private static HistDBHelper sHelper;
+	private static BloqqDBHelper sHelper;
 
 	@Override
 	public void onCreate() {
@@ -23,8 +23,12 @@ public class App extends Application {
 
 		createDb();
 
-		sDiskCache = new DiskCache(getApplicationContext(), "icons",
-				10 * 1024 * 1024, CompressFormat.JPEG, 100);
+		try {
+			sDiskCache = new DiskCache(getApplicationContext(), "icons",
+					10 * 1024 * 1024, CompressFormat.JPEG, 100);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	public DiskCache getDiskCache() {
@@ -42,7 +46,7 @@ public class App extends Application {
 	}
 
 	public void createDb() {
-		sHelper = new HistDBHelper(this);
+		sHelper = new BloqqDBHelper(this);
 		sDb = sHelper.getWritableDatabase();
 	}
 }

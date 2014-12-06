@@ -5,10 +5,14 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v4.view.MenuItemCompat.OnActionExpandListener;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -32,22 +36,24 @@ import android.widget.Toast;
 import com.bloqq.BlocksAdapter;
 import com.bloqq.BloqqWebView;
 import com.bloqq.R;
+import com.bloqq.SwipeTouchListener;
 import com.bloqq.cache.App;
 import com.bloqq.cache.DiskCache;
 import com.bloqq.edits.AddressUrlEdit;
 import com.bloqq.edits.BlockUrlEdit;
+import com.bloqq.sqlite.UpdateFavDbTask;
 import com.bloqq.sqlite.UpdateHistDbTask;
 import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 
 public class MainActivity extends ActionBarActivity {
 
-	// WebView mWebView;
 	private BloqqWebView mWebView;
 	private String mHomepage;
 	private String mCurrentUrl;
 	public final static String HOMEPAGE = "homepage";
 
 	public final static int REQUEST_HIST = 0;
+	public final static int REQUEST_FAV = 1;
 	public final static String EXTRA_URL = "url";
 
 	private SlidingMenu mMenu;
@@ -56,80 +62,60 @@ public class MainActivity extends ActionBarActivity {
 
 	private BlockUrlEdit mInputUrl;
 
-	private boolean mIsUrlListened;
-
-	@SuppressLint("SetJavaScriptEnabled")
+	@SuppressLint({ "SetJavaScriptEnabled", "NewApi" })
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		mPrefs = PreferenceManager.getDefaultSharedPreferences(this);// getSharedPreferences("settings",
-																		// Context.MODE_PRIVATE);
+
+		mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
 		mHomepage = mPrefs.getString(HOMEPAGE, "http://google.com");
 
-		// SharedPreferences.Editor editor = mPrefs.edit();
-		// editor.putString(HOMEPAGE,
-		// "http://developer.android.com/about/versions/lollipop.html");
-		// editor.commit();
 		getWindow().requestFeature(Window.FEATURE_PROGRESS);
 		setContentView(R.layout.activity_main);
-		// mWebView = (WebView) findViewById(R.id.webPage);
+		getActionBar().setDisplayShowHomeEnabled(false);
+		getActionBar().setDisplayShowTitleEnabled(false);
+
 		mWebView = (BloqqWebView) findViewById(R.id.webPage);
 		mWebView.setWebViewClient(new WebViewClient() {
 
-			public void onReceivedError(WebView view, int errorCode,
-					String description, String failingUrl) {
-				Toast.makeText(getApplicationContext(),
-						"Oh no! " + description, Toast.LENGTH_SHORT).show();
+			@Override
+			public boolean shouldOverrideUrlLoading(WebView view, String url) {
+				App app = (App) getApplication();
+				if (!app.isOnline()) {
+					Toast toast = Toast.makeText(getApplicationContext(),
+							"Internet connection problems", Toast.LENGTH_LONG);
+					toast.setGravity(Gravity.CENTER, 0, 0);
+					toast.show();
+				}
+				return super.shouldOverrideUrlLoading(view, url);
 			}
 
 			@Override
 			public void onPageFinished(WebView view, String url) {
-				final View edit = findViewById(R.id.action_go);
 
-				if (edit.getClass().getSimpleName()
-						.equals(AddressUrlEdit.class.getSimpleName())) {
-					if (!mIsUrlListened) {
-						AddressUrlEdit uInput = (AddressUrlEdit) edit;
-						uInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-							@Override
-							public boolean onEditorAction(TextView v,
-									int actionId, KeyEvent event) {
-								if (actionId == EditorInfo.IME_ACTION_GO) {
-									mCurrentUrl = ((AddressUrlEdit) edit)
-											.getText().toString();
-									mWebView.loadUrl(mCurrentUrl);
-									return true;
-								}
-								return false;
-							}
-						});
-						uInput.setOnFocusChangeListener(new OnFocusChangeListener() {
-
-							@Override
-							public void onFocusChange(View v, boolean hasFocus) {
-								if (v.getId() == R.id.action_go && !hasFocus) {
-									InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-									imm.hideSoftInputFromWindow(
-											edit.getWindowToken(), 0);
-								}
-							}
-						});
-						mIsUrlListened = true;
-					}
-					((AddressUrlEdit) edit).setText(url);
-				}
 				mCurrentUrl = url;
 				super.onPageFinished(view, url);
-				edit.clearFocus();
 				findViewById(R.id.main_layout).requestFocus();
 				new UpdateHistDbTask(getApplicationContext()).execute(mWebView
 						.copyBackForwardList());
 			}
 		});
-
-		mWebView.getSettings().setJavaScriptEnabled(true);
+		if (mPrefs.getBoolean("js_enabled", true)) {
+			mWebView.getSettings().setJavaScriptEnabled(true);
+		}
 		mWebView.getSettings().setBuiltInZoomControls(true);
-		mWebView.getSettings().setDefaultFixedFontSize(10);
+
+		try {
+			int fontSize = Integer.parseInt(mPrefs
+					.getString("font_size", "100"));
+			mWebView.getSettings().setTextZoom(fontSize);
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+		}
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+			mWebView.getSettings().setAllowUniversalAccessFromFileURLs(true);
+		}
+
 		final Activity activity = this;
 		mWebView.setWebChromeClient(new WebChromeClient() {
 			@Override
@@ -142,18 +128,25 @@ public class MainActivity extends ActionBarActivity {
 
 		mMenu = new SlidingMenu(this);
 		mMenu.setMode(SlidingMenu.LEFT);
-		// mMenu.setMode(SlidingMenu.LEFT_RIGHT);
 		mMenu.setTouchModeAbove(SlidingMenu.TOUCHMODE_MARGIN);
-		// menu.setShadowWidthRes(R.dimen.dialog_fixed_width_minor);//
-		// shadow_width);
-		// menu.setShadowDrawable(R.drawable.abc_ab_bottom_solid_light_holo);
-		// menu.setBehindOffsetRes(15);// slidingmenu_offset);
 		mMenu.setFadeEnabled(true);
 		mMenu.setFadeDegree(0.35f);
 		mMenu.attachToActivity(this, SlidingMenu.SLIDING_WINDOW);
 		mMenu.setMenu(R.layout.left_sliding_menu);
 		mMenu.setSlidingEnabled(true);
-		// mMenu.setSecondaryMenu(R.layout.activity_main);
+
+		View menuLayout = findViewById(R.id.menu_relative_layout);
+		menuLayout.setOnTouchListener(new SwipeTouchListener(this) {
+
+			@Override
+			public void onSwipeRight() {
+			}
+
+			@Override
+			public void onSwipeLeft() {
+				mMenu.toggle();
+			}
+		});
 
 		GridView grid = (GridView) mMenu.findViewById(R.id.menu_grid_layout);
 		final BlocksAdapter adapter = new BlocksAdapter(this, mPrefs);
@@ -164,12 +157,13 @@ public class MainActivity extends ActionBarActivity {
 			public void onItemClick(AdapterView<?> parent, View v,
 					int position, long id) {
 				mWebView.loadUrl(v.getTag().toString());
-				mMenu.toggle();
+				if (mMenu.isShown()) {
+					mMenu.toggle();
+				}
 				Log.i("DEBUG", v.getTag().toString());
 			}
 		});
 		grid.setOnItemLongClickListener(new OnItemLongClickListener() {
-			// Left and Right
 			@Override
 			public boolean onItemLongClick(AdapterView<?> parent, View v,
 					int position, long id) {
@@ -179,14 +173,13 @@ public class MainActivity extends ActionBarActivity {
 				}
 				mInputUrl = new BlockUrlEdit(getApplicationContext(), position);
 
-				RelativeLayout layout = (RelativeLayout) findViewById(R.id.menu_relative_layout);
-				// p.topMargin = 50;
-				// p.addRule(RelativeLayout.ABOVE, R.id.menu_grid_layout);
-				layout.addView(mInputUrl);
-				// mInputUrl.setInputType(InputType.TYPE_CLASS_TEXT);
-				// mInputUrl.setContentDescription("text");
+				if (!v.getTag().toString().isEmpty()) {
+					mInputUrl.setText(v.getTag().toString());
+				}
 
-				// inputUrl.setText("http://");
+				RelativeLayout layout = (RelativeLayout) findViewById(R.id.menu_relative_layout);
+
+				layout.addView(mInputUrl);
 
 				mInputUrl.setOnFocusChangeListener(new OnFocusChangeListener() {
 
@@ -208,9 +201,17 @@ public class MainActivity extends ActionBarActivity {
 								if (actionId == EditorInfo.IME_ACTION_DONE) {
 									SharedPreferences.Editor editor = mPrefs
 											.edit();
+									String url = mInputUrl.getText().toString();
+									if (url.startsWith("http://")
+											|| url.startsWith("https://")) {
+										mCurrentUrl = url;
+									} else {
+										mCurrentUrl = "http://" + url;
+									}
+
 									editor.putString(
 											"uri" + mInputUrl.getPosition(),
-											mInputUrl.getText().toString());
+											mCurrentUrl);
 									editor.commit();
 									DiskCache cache = ((App) getApplication())
 											.getDiskCache();
@@ -219,10 +220,6 @@ public class MainActivity extends ActionBarActivity {
 									adapter.notifyDataSetChanged();
 									mInputUrl.setVisibility(View.GONE);
 									mInputUrl = null;
-									// mCurrentUrl =
-									// inputUrl.getText().toString();
-									// mWebView.loadUrl(mCurrentUrl);
-
 									return true;
 								}
 								return false;
@@ -235,22 +232,85 @@ public class MainActivity extends ActionBarActivity {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
+		MenuItem item = menu.findItem(R.id.action_go);
+		MenuItemCompat.setOnActionExpandListener(item,
+				new OnActionExpandListener() {
+
+					@Override
+					public boolean onMenuItemActionExpand(MenuItem item) {
+
+						final View edit = MenuItemCompat.getActionView(item);
+						if (edit.getClass().getSimpleName()
+								.equals(AddressUrlEdit.class.getSimpleName())) {
+							AddressUrlEdit uInput = (AddressUrlEdit) edit;
+							uInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+								@Override
+								public boolean onEditorAction(TextView v,
+										int actionId, KeyEvent event) {
+									if (actionId == EditorInfo.IME_ACTION_GO) {
+										String url = ((AddressUrlEdit) edit)
+												.getText().toString();
+										if (url.startsWith("http://")
+												|| url.startsWith("https://")) {
+											mCurrentUrl = url;
+											mWebView.loadUrl(mCurrentUrl);
+										} else {
+											mCurrentUrl = "http://google.com/search?q="
+													+ url;
+											mWebView.loadUrl(mCurrentUrl);
+										}
+										return true;
+									}
+									return false;
+								}
+							});
+							uInput.setOnFocusChangeListener(new OnFocusChangeListener() {
+
+								@Override
+								public void onFocusChange(View v,
+										boolean hasFocus) {
+									if (v.getId() == R.id.action_go
+											&& !hasFocus) {
+										InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+										imm.hideSoftInputFromWindow(
+												edit.getWindowToken(), 0);
+									}
+								}
+							});
+							((AddressUrlEdit) edit).setText(mCurrentUrl);
+							edit.clearFocus();
+						}
+
+						return true;
+					}
+
+					@Override
+					public boolean onMenuItemActionCollapse(MenuItem item) {
+						return true;
+					}
+				});
 		return true;
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
 		int id = item.getItemId();
 		if (id == R.id.go_button) {
 			View go = findViewById(R.id.action_go);
 			if (go instanceof EditText) {
-				mCurrentUrl = ((EditText) go).getText().toString();
-				mWebView.loadUrl(mCurrentUrl);
+				if (go instanceof EditText) {
+					String url = ((AddressUrlEdit) go).getText().toString();
+					if (url.startsWith("http://") || url.startsWith("https://")) {
+						mCurrentUrl = url;
+						mWebView.loadUrl(mCurrentUrl);
+					} else {
+						mCurrentUrl = "http://google.com/search?q=" + url;
+						mWebView.loadUrl(mCurrentUrl);
+					}
+				} else {
+					mWebView.loadUrl(mCurrentUrl);
+				}
 			} else {
 				mWebView.loadUrl(mCurrentUrl);
 			}
@@ -261,21 +321,21 @@ public class MainActivity extends ActionBarActivity {
 		} else if (id == R.id.settings_button) {
 			Intent intent = new Intent(MainActivity.this,
 					SettingsActivity.class);
-			startActivityForResult(intent, REQUEST_HIST);
+			startActivity(intent);
+		} else if (id == R.id.fav_add_button) {
+			new UpdateFavDbTask(this).execute(mWebView.getTitle(),
+					mWebView.getUrl());
+		} else if (id == R.id.fav_button) {
+			Intent intent = new Intent(MainActivity.this,
+					FavoriteActivity.class);
+			startActivityForResult(intent, REQUEST_FAV);
 		}
 		return super.onOptionsItemSelected(item);
 	}
 
-	/*
-	 * @Override public boolean onKeyDown(int keyCode, KeyEvent event) { if
-	 * (keyCode == KeyEvent.KEYCODE_BACK && mWebView.canGoBack()) {
-	 * mWebView.goBack(); return true; } return super.onKeyDown(keyCode, event);
-	 * }
-	 */
 	@Override
 	public void onBackPressed() {
 		if (mMenu.isMenuShowing()) {
-			// mMenu.showContent();
 			mMenu.toggle(true);
 		}
 		if (mWebView.canGoBack()) {
@@ -300,7 +360,10 @@ public class MainActivity extends ActionBarActivity {
 			if (requestResult == RESULT_OK) {
 				mWebView.loadUrl(intent.getStringExtra(EXTRA_URL));
 			}
+		} else if (requestCode == REQUEST_FAV) {
+			if (requestResult == RESULT_OK) {
+				mWebView.loadUrl(intent.getStringExtra(EXTRA_URL));
+			}
 		}
 	}
-
 }

@@ -9,7 +9,7 @@ import android.util.Log;
 
 import com.bloqq.cache.App;
 
-public class HistContentProvider extends ContentProvider {
+public class BloqqContentProvider extends ContentProvider {
 
 	@Override
 	public boolean onCreate() {
@@ -19,13 +19,11 @@ public class HistContentProvider extends ContentProvider {
 	@Override
 	public Cursor query(Uri uri, String[] projection, String selection,
 			String[] selectionArgs, String sortOrder) {
-		// Log.i("DEBUG", "query " + uri.toString());
-		Log.i("DEBUG", "DB select..");
 		App app = (App) getContext();
 		SQLiteDatabase db = app.getDB();
 		Cursor cur = db.query(uri.getPath().replace('/', ' '), projection,
-				selection, selectionArgs, null, null,
-				HistDBHelper.Hist.COLUMN_URL + " DESC");
+				selection, selectionArgs, null, null, sortOrder);
+		// BloqqDBHelper.Hist.COLUMN_URL + " DESC");
 		return cur;
 	}
 

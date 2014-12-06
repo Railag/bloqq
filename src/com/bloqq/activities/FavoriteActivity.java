@@ -13,7 +13,7 @@ import android.widget.ListAdapter;
 import com.bloqq.R;
 import com.bloqq.sqlite.BloqqDBHelper;
 
-public class HistoryActivity extends ListActivity {
+public class FavoriteActivity extends ListActivity {
 
 	private Cursor mCursor;
 
@@ -21,18 +21,16 @@ public class HistoryActivity extends ListActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_hist);
+		setContentView(R.layout.activity_fav);
 
 		mCursor = getContentResolver().query(
-				BloqqDBHelper.Hist.CONTENT_URI_HIST_DB, null, null, null,
-				BloqqDBHelper.Hist.COLUMN_DATE + " DESC");
+				BloqqDBHelper.Fav.CONTENT_URI_FAV_DB, null, null, null,
+				BloqqDBHelper.Fav.COLUMN_TITLE + " DESC");
 
-		ListAdapter adapter = new SimpleCursorAdapter(this, R.layout.hist_item,
-				mCursor, new String[] { BloqqDBHelper.Hist.COLUMN_TITLE,
-						BloqqDBHelper.Hist.COLUMN_URL,
-						BloqqDBHelper.Hist.COLUMN_DATE }, new int[] {
-						R.id.hist_item_title, R.id.hist_item_url,
-						R.id.hist_item_date });
+		ListAdapter adapter = new SimpleCursorAdapter(this, R.layout.fav_item,
+				mCursor, new String[] { BloqqDBHelper.Fav.COLUMN_TITLE,
+						BloqqDBHelper.Fav.COLUMN_URL }, new int[] {
+						R.id.fav_item_title, R.id.fav_item_url });
 
 		setListAdapter(adapter);
 		getListView().setOnItemClickListener(new OnItemClickListener() {
@@ -43,8 +41,7 @@ public class HistoryActivity extends ListActivity {
 				Cursor itemCursor = (Cursor) getListAdapter().getItem(position);
 
 				String url = itemCursor.getString(itemCursor
-						.getColumnIndex(BloqqDBHelper.Hist.COLUMN_URL));
-
+						.getColumnIndex(BloqqDBHelper.Fav.COLUMN_URL));
 				Intent data = new Intent();
 				data.putExtra(MainActivity.EXTRA_URL, url);
 				setResult(RESULT_OK, data);

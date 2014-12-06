@@ -9,6 +9,8 @@
         android:targetSdkVersion="19" />
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:name="com.bloqq.cache.App"
@@ -31,13 +33,30 @@
             android:label="@string/hist" >
         </activity>
         <activity
+            android:name="com.bloqq.activities.FavoriteActivity"
+            android:label="@string/fav" >
+        </activity>
+        <activity
             android:name="com.bloqq.activities.SettingsActivity"
             android:label="@string/settings" >
         </activity>
+        <activity
+            android:name="com.bloqq.activities.ReceiveActivity"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+            </intent-filter>
+        </activity>
 
         <provider
-            android:name="com.bloqq.sqlite.HistContentProvider"
-            android:authorities="com.bloqq.sqlite.HistContentProvider"
+            android:name="com.bloqq.sqlite.BloqqContentProvider"
+            android:authorities="com.bloqq.sqlite.BloqqContentProvider"
             android:exported="false" />
     </application>
 

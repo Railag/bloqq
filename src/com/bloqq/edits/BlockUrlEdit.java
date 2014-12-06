@@ -32,30 +32,26 @@ public class BlockUrlEdit extends EditText {
 		this.setLayoutParams(p);
 		this.setBackgroundColor(Color.LTGRAY);
 
-		// this.setShadowLayer(2.0f, 0.0f, 0.0f, 0xffff77ff);
-		// this.setTextColor(0xffffffff);
 		this.setShadowLayer(4.0f, 2.0f, 2.0f, 0xff000000);
 		this.setTextColor(0xffffffff);
-
-		// this.setTextColor(Color.BLACK);
 
 		Field f = null;
 		try {
 			f = TextView.class.getDeclaredField("mCursorDrawableRes");
+			f.setAccessible(true);
+			try {
+				f.set(this, R.drawable.cursor);
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+			}
 		} catch (NoSuchFieldException e) {
 			e.printStackTrace();
 		}
-		f.setAccessible(true);
-		try {
-			f.set(this, R.drawable.cursor);
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		}
+
 		this.requestFocus();
 
-		// MainActivity ma = ((MainActivity)context).getHomepage();
 		SharedPreferences prefs = context.getSharedPreferences("settings",
 				Context.MODE_PRIVATE);
 		this.setText(prefs.getString("uri" + mPosition, "http://"));

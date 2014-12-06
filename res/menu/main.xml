@@ -20,6 +20,16 @@
         android:orderInCategory="800"
         android:title="@string/hist"/>
     <item
+        android:id="@+id/fav_button"
+        ActionBar:showAsAction="ifRoom"
+        android:orderInCategory="600"
+        android:title="@string/fav"/>
+    <item
+        android:id="@+id/fav_add_button"
+        ActionBar:showAsAction="ifRoom"
+        android:orderInCategory="550"
+        android:title="@string/fav_add"/>
+    <item
         android:id="@+id/action_go"
         ActionBar:actionViewClass="com.bloqq.edits.AddressUrlEdit"
         ActionBar:showAsAction="ifRoom|collapseActionView"

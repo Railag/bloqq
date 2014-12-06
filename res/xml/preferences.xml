@@ -6,4 +6,28 @@
         android:summary="@string/pref_homepage_summary"
         android:title="@string/pref_homepage" />
 
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="js_enabled"
+        android:summaryOff="Disabled"
+        android:summaryOn="Enabled"
+        android:title="Use JS" />
+
+    <ListPreference
+        android:defaultValue="@string/default_font_size"
+        android:entries="@array/font_sizes"
+        android:entryValues="@array/font_sizes_int"
+        android:icon="@android:drawable/btn_default_small"
+        android:key="font_size"
+        android:title="@string/font_size" />
+
+    <Preference
+        android:key="button_clear_hist"
+        android:summary="Press to clear"
+        android:title="@string/clear_hist" />
+    <Preference
+        android:key="button_clear_fav"
+        android:summary="Press to clear"
+        android:title="@string/clear_fav" />
+
 </PreferenceScreen>
